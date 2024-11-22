@@ -10,10 +10,12 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import uuid from "react-native-uuid";
 
 export default function Index() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
+  const [toDos, setToDos] = useState({});
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload: string) => setText(payload);
@@ -21,8 +23,14 @@ export default function Index() {
     Keyboard.dismiss();
   };
   const addToDo = () => {
-    alert(text);
-  }
+    if (text === "") return;
+    const newToDos = Object.assign({}, toDos, {
+      [uuid.v4()]: { text, work: working },
+    });
+    setToDos(newToDos);
+    setText("");
+  };
+  console.log(toDos);
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
@@ -51,9 +59,6 @@ export default function Index() {
         </View>
         <TextInput
           onSubmitEditing={addToDo}
-          // multiline
-          // If we set multiline (props) it will trigger a confilct itself ! We cannot trigger submit event anymore when click "return" :D 
-          // It only when down the line when we click so that Messenger has to make a separate button to handle the Submit!!! So ankward :X
           value={text}
           onChangeText={onChangeText}
           returnKeyType="done"
