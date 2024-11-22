@@ -2,7 +2,7 @@
 import { theme } from "@/color";
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 
 export default function Index() {
   const [working, setWorking] = useState(true);
@@ -10,8 +10,12 @@ export default function Index() {
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload:string) => setText(payload);
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  }
   return (
-    <View style={styles.container}>
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+      <View style={styles.container}>
       <StatusBar style="auto"/>
       <View style={styles.header}>
         <TouchableOpacity onPress={work}>
@@ -23,6 +27,7 @@ export default function Index() {
       </View>
         <TextInput value={text} onChangeText={onChangeText} multiline returnKeyType="done" placeholder={working ? "Add ToDo !" : "Where You Wanna Go ?"} placeholderTextColor="grey" style={styles.input}/>
     </View>
+    </TouchableWithoutFeedback>
   );
 }
 
