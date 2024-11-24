@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import {
   Keyboard,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,7 +16,7 @@ import uuid from "react-native-uuid";
 export default function Index() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
-  const [toDos, setToDos] = useState({});
+  const [toDos, setToDos] = useState<{[key: string]: {text: string, work: boolean}}>({});
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload: string) => setText(payload);
@@ -24,13 +25,11 @@ export default function Index() {
   };
   const addToDo = () => {
     if (text === "") return;
-    const newToDos = Object.assign({}, toDos, {
-      [uuid.v4()]: { text, work: working },
-    });
+    const newToDos = {...toDos, [uuid.v4()] : {text, work: working}}
     setToDos(newToDos);
     setText("");
   };
-  console.log(toDos);
+  console.log(Object.keys(toDos));
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
@@ -66,6 +65,13 @@ export default function Index() {
           placeholderTextColor="grey"
           style={styles.input}
         />
+        <ScrollView>
+          {Object.keys(toDos).map(k => (
+            <View style={styles.toDo} key={k}>
+              <Text style={styles.toDoText}> {toDos[k].text} </Text>
+            </View>
+          ))}
+        </ScrollView>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -91,9 +97,21 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     paddingVertical: 13,
     paddingHorizontal: 13,
-    margin: 13,
+    marginVertical: 15,
     borderWidth: 1,
     borderRadius: 30,
     fontSize: 17,
+  },
+  toDo: {
+     backgroundColor: theme.toDoBg,
+     marginBottom: 10,
+     paddingVertical: 20,
+     paddingHorizontal: 20,
+     borderRadius: 15, 
+  },
+  toDoText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "600"
   },
 });
