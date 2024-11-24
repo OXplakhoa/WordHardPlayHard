@@ -16,7 +16,7 @@ import uuid from "react-native-uuid";
 export default function Index() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
-  const [toDos, setToDos] = useState<{[key: string]: {text: string, work: boolean}}>({});
+  const [toDos, setToDos] = useState<{[key: string]: {text: string, working: boolean}}>({});
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload: string) => setText(payload);
@@ -25,11 +25,10 @@ export default function Index() {
   };
   const addToDo = () => {
     if (text === "") return;
-    const newToDos = {...toDos, [uuid.v4()] : {text, work: working}}
+    const newToDos = {...toDos, [uuid.v4()] : {text, working}}
     setToDos(newToDos);
     setText("");
   };
-  console.log(Object.keys(toDos));
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
@@ -67,10 +66,12 @@ export default function Index() {
         />
         <ScrollView>
           {Object.keys(toDos).map(k => (
+            toDos[k].working === working ? 
             <View style={styles.toDo} key={k}>
               <Text style={styles.toDoText}> {toDos[k].text} </Text>
             </View>
-          ))}
+          : null  
+        ))}
         </ScrollView>
       </View>
     </TouchableWithoutFeedback>
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   toDo: {
-     backgroundColor: theme.toDoBg,
+     backgroundColor: theme.grey,
      marginBottom: 10,
      paddingVertical: 20,
      paddingHorizontal: 20,
