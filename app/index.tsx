@@ -1,6 +1,6 @@
 import { theme } from "@/color";
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Keyboard,
   ScrollView,
@@ -12,21 +12,44 @@ import {
   View,
 } from "react-native";
 import uuid from "react-native-uuid";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+const STORAGE_KEY = "@ToDos";
 export default function Index() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState("");
-  const [toDos, setToDos] = useState<{[key: string]: {text: string, working: boolean}}>({});
+  const [toDos, setToDos] = useState<{
+    [key: string]: { text: string; working: boolean };
+  }>({});
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload: string) => setText(payload);
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
-  const addToDo = () => {
+  const saveToDo = async (value: any) => {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+    } catch (e: any) {
+      console.error(e);
+    }
+  };
+  const getToDo = async () => {
+    try {
+      const jsonVal: string | null= await AsyncStorage.getItem(STORAGE_KEY);
+      return jsonVal != null ? setToDos(JSON.parse(jsonVal)) : null;
+    } catch (e: any) {
+      console.error(e);
+    }
+  };
+  useEffect(() => {
+    getToDo();
+  },[])
+  const addToDo = async () => {
     if (text === "") return;
-    const newToDos = {...toDos, [uuid.v4()] : {text, working}}
+    const newToDos = { ...toDos, [uuid.v4()]: { text, working } };
     setToDos(newToDos);
+    await saveToDo(newToDos);
     setText("");
   };
   return (
@@ -65,13 +88,13 @@ export default function Index() {
           style={styles.input}
         />
         <ScrollView>
-          {Object.keys(toDos).map(k => (
-            toDos[k].working === working ? 
-            <View style={styles.toDo} key={k}>
-              <Text style={styles.toDoText}> {toDos[k].text} </Text>
-            </View>
-          : null  
-        ))}
+          {Object.keys(toDos).map((k) =>
+            toDos[k].working === working ? (
+              <View style={styles.toDo} key={k}>
+                <Text style={styles.toDoText}> {toDos[k].text} </Text>
+              </View>
+            ) : null
+          )}
         </ScrollView>
       </View>
     </TouchableWithoutFeedback>
@@ -104,15 +127,15 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   toDo: {
-     backgroundColor: theme.grey,
-     marginBottom: 10,
-     paddingVertical: 20,
-     paddingHorizontal: 20,
-     borderRadius: 15, 
+    backgroundColor: theme.grey,
+    marginBottom: 10,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: 15,
   },
   toDoText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "600"
+    fontWeight: "600",
   },
 });
