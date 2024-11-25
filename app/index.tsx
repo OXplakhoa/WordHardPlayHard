@@ -2,6 +2,7 @@ import { theme } from "@/color";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import {
+  Alert,
   Keyboard,
   ScrollView,
   StyleSheet,
@@ -13,6 +14,7 @@ import {
 } from "react-native";
 import uuid from "react-native-uuid";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 const STORAGE_KEY = "@ToDos";
 export default function Index() {
   const [working, setWorking] = useState(true);
@@ -36,7 +38,7 @@ export default function Index() {
   };
   const getToDo = async () => {
     try {
-      const jsonVal: string | null= await AsyncStorage.getItem(STORAGE_KEY);
+      const jsonVal: string | null = await AsyncStorage.getItem(STORAGE_KEY);
       return jsonVal != null ? setToDos(JSON.parse(jsonVal)) : null;
     } catch (e: any) {
       console.error(e);
@@ -44,7 +46,7 @@ export default function Index() {
   };
   useEffect(() => {
     getToDo();
-  },[])
+  }, []);
   const addToDo = async () => {
     if (text === "") return;
     const newToDos = { ...toDos, [uuid.v4()]: { text, working } };
@@ -52,6 +54,25 @@ export default function Index() {
     await saveToDo(newToDos);
     setText("");
   };
+  const deleteToDo = (key:string) => {
+    Alert.alert(working ? "Delete Works" : "Delete Travels",'Are you sure you want delete?',[
+      {
+        text: 'Cancel',
+        style:"destructive",
+        onPress: () => {
+          return;
+        }
+      },
+      {
+        text: 'Yes',
+        onPress: async () => {
+          const {[key]: deleted, ...newToDo} = toDos;
+          setToDos(newToDo);
+          await saveToDo(newToDo);
+        }
+      },
+    ])
+  }
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
@@ -88,10 +109,13 @@ export default function Index() {
           style={styles.input}
         />
         <ScrollView>
-          {Object.keys(toDos).map((k) =>
-            toDos[k].working === working ? (
-              <View style={styles.toDo} key={k}>
-                <Text style={styles.toDoText}> {toDos[k].text} </Text>
+          {Object.keys(toDos).map((key) =>
+            toDos[key].working === working ? (
+              <View style={styles.toDo} key={key}>
+                <Text style={styles.toDoText}> {toDos[key].text} </Text>
+                <TouchableOpacity onPress={() => deleteToDo(key)}>
+                  <Text><MaterialIcons name="cancel" size={26} color="tomato" /></Text>
+                </TouchableOpacity>
               </View>
             ) : null
           )}
@@ -132,10 +156,13 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
   },
   toDoText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 30,
     fontWeight: "600",
   },
 });
