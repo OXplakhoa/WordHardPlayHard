@@ -14,16 +14,16 @@ import {
 } from "react-native";
 import uuid from "react-native-uuid";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 const STORAGE_KEY = "@ToDos";
 export default function Index() {
-  const [working, setWorking] = useState(true);
+  const [working, setWorking] = useState<boolean|null>(null);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState<{
     [key: string]: { text: string; working: boolean };
   }>({});
-  const travel = () => setWorking(false);
   const work = () => setWorking(true);
+  const travel = () => setWorking(false);
   const onChangeText = (payload: string) => setText(payload);
   const dismissKeyboard = () => {
     Keyboard.dismiss();
@@ -39,6 +39,18 @@ export default function Index() {
   const getToDo = async () => {
     try {
       const jsonVal: string | null = await AsyncStorage.getItem(STORAGE_KEY);
+      console.log(jsonVal);
+      if (jsonVal != null){
+        const parsedData = JSON.parse(jsonVal);
+        // const keys = Object.keys(parsedData);
+        // const lastKey = keys[keys.length-1];
+        // const lastWorking = parsedData[lastKey].working;
+        const lastWorking = parsedData[Object.keys(parsedData).pop()!]?.working;
+        setWorking(lastWorking);
+        setToDos(parsedData);
+      }else {
+        return;
+      }
       return jsonVal != null ? setToDos(JSON.parse(jsonVal)) : null;
     } catch (e: any) {
       console.error(e);
@@ -49,29 +61,41 @@ export default function Index() {
   }, []);
   const addToDo = async () => {
     if (text === "") return;
-    const newToDos = { ...toDos, [uuid.v4()]: { text, working } };
+    const currentWorking = working ?? true;
+    const newToDos = { ...toDos, [uuid.v4()]: { text, working: currentWorking } };
     setToDos(newToDos);
     await saveToDo(newToDos);
     setText("");
   };
-  const deleteToDo = (key:string) => {
-    Alert.alert(working ? "Delete Works" : "Delete Travels",'Are you sure you want delete?',[
-      {
-        text: 'Cancel',
-        style:"destructive",
-        onPress: () => {
-          return;
-        }
-      },
-      {
-        text: 'Yes',
-        onPress: async () => {
-          const {[key]: deleted, ...newToDo} = toDos;
-          setToDos(newToDo);
-          await saveToDo(newToDo);
-        }
-      },
-    ])
+  const deleteToDo = (key: string) => {
+    Alert.alert(
+      working ? "Delete Works" : "Delete Travels",
+      "Are you sure you want delete?",
+      [
+        {
+          text: "Cancel",
+          style: "destructive",
+          onPress: () => {
+            return;
+          },
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            const { [key]: deleted, ...newToDo } = toDos;
+            setToDos(newToDo);
+            await saveToDo(newToDo);
+          },
+        },
+      ]
+    );
+  };
+  if (working === null) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
   }
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -114,7 +138,9 @@ export default function Index() {
               <View style={styles.toDo} key={key}>
                 <Text style={styles.toDoText}> {toDos[key].text} </Text>
                 <TouchableOpacity onPress={() => deleteToDo(key)}>
-                  <Text><MaterialIcons name="cancel" size={26} color="tomato" /></Text>
+                  <Text>
+                    <MaterialIcons name="cancel" size={26} color="tomato" />
+                  </Text>
                 </TouchableOpacity>
               </View>
             ) : null
@@ -158,7 +184,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   toDoText: {
     color: "#fff",
