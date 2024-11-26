@@ -14,8 +14,9 @@ import {
 } from "react-native";
 import uuid from "react-native-uuid";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import Fontisto from "@expo/vector-icons/Fontisto";
 import AntDesign from "@expo/vector-icons/AntDesign";
-import SwipeableToDo from "./components/SwipeableToDo";
 const STORAGE_KEY = "@ToDos";
 export default function Index() {
   const [editMode,setEditMode] = useState<boolean>(false);
@@ -25,7 +26,6 @@ export default function Index() {
   const [toDos, setToDos] = useState<{
     [key: string]: { text: string; working: boolean; completed: boolean };
   }>({});
-  const complete = () => setCompleted(true);
   const work = () => setWorking(true);
   const travel = () => setWorking(false);
   const onChangeText = (payload: string) => setText(payload);
@@ -143,13 +143,34 @@ export default function Index() {
           style={styles.input}
         />
         <ScrollView>
-      {Object.keys(toDos).map((key) => {
-        const todo = toDos[key];
-        return todo.working === working ? (
-          <SwipeableToDo key={key} todo={todo} onDelete={() => deleteToDo(key)} />
-        ) : null;
-      })}
-    </ScrollView>
+          {Object.keys(toDos).map((key) =>
+            toDos[key].working === working ? (
+              <View style={styles.toDo} key={key}>
+                <Text style={styles.toDoText}> 
+                  {toDos[key].text} 
+                </Text>
+                <View style={styles.toDoButtons}>
+                  <TouchableOpacity
+                    //onPress={() => toggleComplete(key)}
+                    style={styles.toDoIcon}
+                  >
+                    <Fontisto
+                      name={toDos[key].completed ? "checkbox-active" : "checkbox-passive"}
+                      size={26}
+                      color="#dff8fc"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => deleteToDo(key)}
+                    style={styles.toDoIcon}
+                  >
+                    <MaterialIcons name="cancel" size={26} color="tomato" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : null
+          )}
+        </ScrollView>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -195,8 +216,13 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "600",
   },
+  toDoButtons: {
+    flexDirection: "row", // Arrange items in a row
+    alignItems: "center", // Align items vertically in the center
+    gap: 10, // Add spacing between buttons (or use margin)
+  },
+  toDoIcon: {
+    // Optional: Add padding or adjust size if needed
+    paddingHorizontal: 5,
+  },
 });
-
-
-// 2. Add a completion function to Todo
-// 3. Add an edit function to Todo
