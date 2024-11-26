@@ -14,14 +14,18 @@ import {
 } from "react-native";
 import uuid from "react-native-uuid";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import SwipeableToDo from "./components/SwipeableToDo";
 const STORAGE_KEY = "@ToDos";
 export default function Index() {
-  const [working, setWorking] = useState<boolean|null>(null);
+  const [editMode,setEditMode] = useState<boolean>(false);
+  const [completed,setCompleted] = useState<boolean>(false);
+  const [working, setWorking] = useState<boolean | null>(null);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState<{
-    [key: string]: { text: string; working: boolean };
+    [key: string]: { text: string; working: boolean; completed: boolean };
   }>({});
+  const complete = () => setCompleted(true);
   const work = () => setWorking(true);
   const travel = () => setWorking(false);
   const onChangeText = (payload: string) => setText(payload);
@@ -40,7 +44,7 @@ export default function Index() {
     try {
       const jsonVal: string | null = await AsyncStorage.getItem(STORAGE_KEY);
       console.log(jsonVal);
-      if (jsonVal != null){
+      if (jsonVal != null) {
         const parsedData = JSON.parse(jsonVal);
         // const keys = Object.keys(parsedData);
         // const lastKey = keys[keys.length-1];
@@ -48,7 +52,7 @@ export default function Index() {
         const lastWorking = parsedData[Object.keys(parsedData).pop()!]?.working;
         setWorking(lastWorking);
         setToDos(parsedData);
-      }else {
+      } else {
         return;
       }
       return jsonVal != null ? setToDos(JSON.parse(jsonVal)) : null;
@@ -62,7 +66,11 @@ export default function Index() {
   const addToDo = async () => {
     if (text === "") return;
     const currentWorking = working ?? true;
-    const newToDos = { ...toDos, [uuid.v4()]: { text, working: currentWorking } };
+    const currentComplete = completed ?? false;
+    const newToDos = {
+      ...toDos,
+      [uuid.v4()]: { text, working: currentWorking, completed: currentComplete },
+    };
     setToDos(newToDos);
     await saveToDo(newToDos);
     setText("");
@@ -93,7 +101,9 @@ export default function Index() {
   if (working === null) {
     return (
       <View style={styles.container}>
-        <Text>Loading...</Text>
+        <Text>
+          <AntDesign name="loading1" size={24} color="white" />
+        </Text>
       </View>
     );
   }
@@ -133,19 +143,13 @@ export default function Index() {
           style={styles.input}
         />
         <ScrollView>
-          {Object.keys(toDos).map((key) =>
-            toDos[key].working === working ? (
-              <View style={styles.toDo} key={key}>
-                <Text style={styles.toDoText}> {toDos[key].text} </Text>
-                <TouchableOpacity onPress={() => deleteToDo(key)}>
-                  <Text>
-                    <MaterialIcons name="cancel" size={26} color="tomato" />
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ) : null
-          )}
-        </ScrollView>
+      {Object.keys(toDos).map((key) => {
+        const todo = toDos[key];
+        return todo.working === working ? (
+          <SwipeableToDo key={key} todo={todo} onDelete={() => deleteToDo(key)} />
+        ) : null;
+      })}
+    </ScrollView>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -192,3 +196,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+
+
+// 2. Add a completion function to Todo
+// 3. Add an edit function to Todo
