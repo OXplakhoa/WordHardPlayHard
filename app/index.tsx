@@ -18,20 +18,20 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import Fontisto from "@expo/vector-icons/Fontisto";
 import AntDesign from "@expo/vector-icons/AntDesign";
 const STORAGE_KEY = "@ToDos";
+
 export default function Index() {
   const [editMode, setEditMode] = useState<boolean>(false);
-  const [completed, setCompleted] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean | null>(null);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState<{
     [key: string]: { text: string; working: boolean; completed: boolean };
   }>({});
+
   const work = () => setWorking(true);
   const travel = () => setWorking(false);
   const onChangeText = (payload: string) => setText(payload);
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
+  const dismissKeyboard = () => Keyboard.dismiss();
+
   const saveToDo = async (value: any) => {
     try {
       const jsonValue = JSON.stringify(value);
@@ -40,45 +40,41 @@ export default function Index() {
       console.error(e);
     }
   };
+
   const getToDo = async () => {
     try {
       const jsonVal: string | null = await AsyncStorage.getItem(STORAGE_KEY);
-      console.log(jsonVal);
       if (jsonVal != null) {
         const parsedData = JSON.parse(jsonVal);
-        // const keys = Object.keys(parsedData);
-        // const lastKey = keys[keys.length-1];
-        // const lastWorking = parsedData[lastKey].working;
         const lastWorking = parsedData[Object.keys(parsedData).pop()!]?.working;
         setWorking(lastWorking);
         setToDos(parsedData);
-      } else {
-        return;
       }
-      return jsonVal != null ? setToDos(JSON.parse(jsonVal)) : null;
     } catch (e: any) {
       console.error(e);
     }
   };
+
   useEffect(() => {
     getToDo();
   }, []);
+
   const addToDo = async () => {
     if (text === "") return;
     const currentWorking = working ?? true;
-    const currentComplete = completed ?? false;
     const newToDos = {
       ...toDos,
       [uuid.v4()]: {
         text,
         working: currentWorking,
-        completed: currentComplete,
+        completed: false, 
       },
     };
     setToDos(newToDos);
     await saveToDo(newToDos);
     setText("");
   };
+
   const deleteToDo = (key: string) => {
     Alert.alert(
       working ? "Delete Works" : "Delete Travels",
@@ -102,12 +98,14 @@ export default function Index() {
       ]
     );
   };
-  const toggleComplete = async(key:string) => {
-    const newToDos = {...toDos};
+
+  const toggleComplete = async (key: string) => {
+    const newToDos = { ...toDos };
     newToDos[key].completed = !newToDos[key].completed;
     setToDos(newToDos);
     await saveToDo(newToDos);
-  }
+  };
+
   if (working === null) {
     return (
       <View style={styles.container}>
@@ -117,6 +115,7 @@ export default function Index() {
       </View>
     );
   }
+
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
@@ -240,8 +239,8 @@ const styles = StyleSheet.create({
   },
   toDoButtons: {
     flexDirection: "row",
-    alignItems: "center", 
-    gap: 10, 
+    alignItems: "center",
+    gap: 10,
   },
   toDoIcon: {
     paddingHorizontal: 5,
