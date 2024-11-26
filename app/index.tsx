@@ -19,8 +19,8 @@ import Fontisto from "@expo/vector-icons/Fontisto";
 import AntDesign from "@expo/vector-icons/AntDesign";
 const STORAGE_KEY = "@ToDos";
 export default function Index() {
-  const [editMode,setEditMode] = useState<boolean>(false);
-  const [completed,setCompleted] = useState<boolean>(false);
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [completed, setCompleted] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean | null>(null);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState<{
@@ -69,7 +69,11 @@ export default function Index() {
     const currentComplete = completed ?? false;
     const newToDos = {
       ...toDos,
-      [uuid.v4()]: { text, working: currentWorking, completed: currentComplete },
+      [uuid.v4()]: {
+        text,
+        working: currentWorking,
+        completed: currentComplete,
+      },
     };
     setToDos(newToDos);
     await saveToDo(newToDos);
@@ -98,6 +102,12 @@ export default function Index() {
       ]
     );
   };
+  const toggleComplete = async(key:string) => {
+    const newToDos = {...toDos};
+    newToDos[key].completed = !newToDos[key].completed;
+    setToDos(newToDos);
+    await saveToDo(newToDos);
+  }
   if (working === null) {
     return (
       <View style={styles.container}>
@@ -146,17 +156,29 @@ export default function Index() {
           {Object.keys(toDos).map((key) =>
             toDos[key].working === working ? (
               <View style={styles.toDo} key={key}>
-                <Text style={styles.toDoText}> 
-                  {toDos[key].text} 
+                <Text
+                  style={StyleSheet.compose(
+                    styles.toDoText,
+                    toDos[key].completed && {
+                      opacity: 0.4,
+                      textDecorationLine: "line-through",
+                    }
+                  )}
+                >
+                  {toDos[key].text}
                 </Text>
                 <View style={styles.toDoButtons}>
                   <TouchableOpacity
-                    //onPress={() => toggleComplete(key)}
+                    onPress={() => toggleComplete(key)}
                     style={styles.toDoIcon}
                   >
                     <Fontisto
-                      name={toDos[key].completed ? "checkbox-active" : "checkbox-passive"}
-                      size={26}
+                      name={
+                        toDos[key].completed
+                          ? "checkbox-active"
+                          : "checkbox-passive"
+                      }
+                      size={22}
                       color="#dff8fc"
                     />
                   </TouchableOpacity>
@@ -217,12 +239,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   toDoButtons: {
-    flexDirection: "row", // Arrange items in a row
-    alignItems: "center", // Align items vertically in the center
-    gap: 10, // Add spacing between buttons (or use margin)
+    flexDirection: "row",
+    alignItems: "center", 
+    gap: 10, 
   },
   toDoIcon: {
-    // Optional: Add padding or adjust size if needed
     paddingHorizontal: 5,
   },
 });
