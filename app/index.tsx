@@ -23,7 +23,12 @@ export default function Index() {
   const [working, setWorking] = useState<boolean | null>(null);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState<{
-    [key: string]: { text: string; working: boolean; completed: boolean; isEditing: boolean };
+    [key: string]: {
+      text: string;
+      working: boolean;
+      completed: boolean;
+      isEditing: boolean;
+    };
   }>({});
 
   const work = () => setWorking(true);
@@ -67,7 +72,7 @@ export default function Index() {
         text,
         working: currentWorking,
         completed: false,
-        isEditing: false, 
+        isEditing: false,
       },
     };
     setToDos(newToDos);
@@ -78,17 +83,18 @@ export default function Index() {
   const deleteToDo = (key: string) => {
     Alert.alert(
       working ? "Delete Works" : "Delete Travels",
-      "Are you sure you want delete?",
+      "Are you sure you want to delete?",
       [
         {
           text: "Cancel",
-          style: "destructive",
+
           onPress: () => {
             return;
           },
         },
         {
-          text: "Yes",
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             const { [key]: deleted, ...newToDo } = toDos;
             setToDos(newToDo);
@@ -104,17 +110,18 @@ export default function Index() {
     setToDos(newToDos);
     await saveToDo(newToDos);
   };
-  const updateText = async(key: string, newText: string) => {
-    const newToDos = {...toDos};
+  const updateText = async (key: string, newText: string) => {
+    const newToDos = { ...toDos };
     newToDos[key].text = newText;
-    setToDos(newToDos)
+    setToDos(newToDos);
     await saveToDo(newToDos);
-  }
-  const toggleEdit = (key: string) => {
-    const newToDos = {...toDos};
+  };
+  const toggleEdit = async (key: string) => {
+    const newToDos = { ...toDos };
     newToDos[key].isEditing = !newToDos[key].isEditing;
     setToDos(newToDos);
-  }
+    await saveToDo(newToDos);
+  };
   if (working === null) {
     return (
       <View style={styles.container}>
@@ -167,26 +174,30 @@ export default function Index() {
                 {toDos[key].isEditing ? (
                   <TextInput
                     value={toDos[key].text}
-                    onChangeText={(newText) => updateText(key,newText)}
+                    onChangeText={(newText) => updateText(key, newText)}
                     style={styles.toDoText}
                     autoFocus
                   />
                 ) : (
                   <Text
-                  style={StyleSheet.compose(
-                    styles.toDoText,
-                    toDos[key].completed && {
-                      opacity: 0.4,
-                      textDecorationLine: "line-through",
-                    }
-                  )}
-                >
-                  {toDos[key].text}
-                </Text>
+                    style={StyleSheet.compose(
+                      styles.toDoText,
+                      toDos[key].completed && {
+                        opacity: 0.4,
+                        textDecorationLine: "line-through",
+                      }
+                    )}
+                  >
+                    {toDos[key].text}
+                  </Text>
                 )}
                 <View style={styles.toDoButtons}>
                   <TouchableOpacity onPress={() => toggleEdit(key)}>
-                    <MaterialIcons name="edit" size={26} color={toDos[key].isEditing ? "#9090ff" : "#fff"} />
+                    <MaterialIcons
+                      name="edit"
+                      size={26}
+                      color={toDos[key].isEditing ? "#9090ff" : "#fff"}
+                    />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => toggleComplete(key)}
