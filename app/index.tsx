@@ -20,11 +20,10 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 const STORAGE_KEY = "@ToDos";
 
 export default function Index() {
-  const [editMode, setEditMode] = useState<boolean>(false);
   const [working, setWorking] = useState<boolean | null>(null);
   const [text, setText] = useState("");
   const [toDos, setToDos] = useState<{
-    [key: string]: { text: string; working: boolean; completed: boolean };
+    [key: string]: { text: string; working: boolean; completed: boolean; isEditing: boolean };
   }>({});
 
   const work = () => setWorking(true);
@@ -67,7 +66,8 @@ export default function Index() {
       [uuid.v4()]: {
         text,
         working: currentWorking,
-        completed: false, 
+        completed: false,
+        isEditing: false, 
       },
     };
     setToDos(newToDos);
@@ -98,14 +98,23 @@ export default function Index() {
       ]
     );
   };
-
   const toggleComplete = async (key: string) => {
     const newToDos = { ...toDos };
     newToDos[key].completed = !newToDos[key].completed;
     setToDos(newToDos);
     await saveToDo(newToDos);
   };
-
+  const updateText = async(key: string, newText: string) => {
+    const newToDos = {...toDos};
+    newToDos[key].text = newText;
+    setToDos(newToDos)
+    await saveToDo(newToDos);
+  }
+  const toggleEdit = (key: string) => {
+    const newToDos = {...toDos};
+    newToDos[key].isEditing = !newToDos[key].isEditing;
+    setToDos(newToDos);
+  }
   if (working === null) {
     return (
       <View style={styles.container}>
@@ -155,7 +164,15 @@ export default function Index() {
           {Object.keys(toDos).map((key) =>
             toDos[key].working === working ? (
               <View style={styles.toDo} key={key}>
-                <Text
+                {toDos[key].isEditing ? (
+                  <TextInput
+                    value={toDos[key].text}
+                    onChangeText={(newText) => updateText(key,newText)}
+                    style={styles.toDoText}
+                    autoFocus
+                  />
+                ) : (
+                  <Text
                   style={StyleSheet.compose(
                     styles.toDoText,
                     toDos[key].completed && {
@@ -166,7 +183,11 @@ export default function Index() {
                 >
                   {toDos[key].text}
                 </Text>
+                )}
                 <View style={styles.toDoButtons}>
+                  <TouchableOpacity onPress={() => toggleEdit(key)}>
+                    <MaterialIcons name="edit" size={26} color="#fff" />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => toggleComplete(key)}
                     style={styles.toDoIcon}
@@ -178,7 +199,7 @@ export default function Index() {
                           : "checkbox-passive"
                       }
                       size={22}
-                      color="#dff8fc"
+                      color="#fff"
                     />
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -241,6 +262,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
+    marginRight: -15,
   },
   toDoIcon: {
     paddingHorizontal: 5,
