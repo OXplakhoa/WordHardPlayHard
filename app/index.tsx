@@ -186,7 +186,7 @@ export default function Index() {
                 )}
                 <View style={styles.toDoButtons}>
                   <TouchableOpacity onPress={() => toggleEdit(key)}>
-                    <MaterialIcons name="edit" size={26} color="#fff" />
+                    <MaterialIcons name="edit" size={26} color={toDos[key].isEditing ? "#9090ff" : "#fff"} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => toggleComplete(key)}
