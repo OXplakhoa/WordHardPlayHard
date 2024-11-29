@@ -10,6 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  Platform,
   View,
 } from "react-native";
 import uuid from "react-native-uuid";
@@ -34,7 +35,6 @@ export default function Index() {
   const work = () => setWorking(true);
   const travel = () => setWorking(false);
   const onChangeText = (payload: string) => setText(payload);
-  const dismissKeyboard = () => Keyboard.dismiss();
 
   const saveToDo = async (value: any) => {
     try {
@@ -81,29 +81,39 @@ export default function Index() {
   };
 
   const deleteToDo = (key: string) => {
-    Alert.alert(
-      working ? "Delete Works" : "Delete Travels",
-      "Are you sure you want to delete?",
-      [
-        {
-          text: "Cancel",
-
-          onPress: () => {
-            return;
+    if(Platform.OS === "web") {
+      const ok = confirm("Are you sure you want to delete?");
+      if (ok){
+        const { [key]: deleted, ...newToDo } = toDos;
+        setToDos(newToDo);
+        saveToDo(newToDo);
+      }
+    }else {
+      Alert.alert(
+        working ? "Delete Works" : "Delete Travels",
+        "Are you sure you want to delete?",
+        [
+          {
+            text: "Cancel",
+  
+            onPress: () => {
+              return;
+            },
           },
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            const { [key]: deleted, ...newToDo } = toDos;
-            setToDos(newToDo);
-            await saveToDo(newToDo);
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              const { [key]: deleted, ...newToDo } = toDos;
+              setToDos(newToDo);
+              await saveToDo(newToDo);
+            },
           },
-        },
-      ]
-    );
-  };
+        ]
+      );
+    };
+    }
+    
   const toggleComplete = async (key: string) => {
     const newToDos = { ...toDos };
     newToDos[key].completed = !newToDos[key].completed;
@@ -122,18 +132,9 @@ export default function Index() {
     setToDos(newToDos);
     await saveToDo(newToDos);
   };
-  if (working === null) {
-    return (
-      <View style={styles.container}>
-        <Text>
-          <AntDesign name="loading1" size={24} color="white" />
-        </Text>
-      </View>
-    );
-  }
+  
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
         <StatusBar style="auto" />
         <View style={styles.header}>
@@ -225,7 +226,6 @@ export default function Index() {
           )}
         </ScrollView>
       </View>
-    </TouchableWithoutFeedback>
   );
 }
 
